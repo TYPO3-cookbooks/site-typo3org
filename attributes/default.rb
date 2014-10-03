@@ -48,4 +48,24 @@ force_default['apache']['worker']['threadsperchild']     = 150
 force_default['apache']['worker']['maxrequestworkers']   = 150
 force_default['apache']['worker']['maxconnectionsperchild'] = 0
 
-default['site-typo3org']
+default['site-typo3org']['apache']['vhosts'] = [
+    {
+        name: 'production',
+        domain: 'typo3.org',
+        domain_aliases: %w{
+            www.typo3.org
+            preview.typo3.org
+            www.preview.typo3.org
+            typo3.com
+            www.typo3.com
+            t3o.typo3.org
+            news.typo3.org
+            typo3org.srv107.typo3.org
+            get.typo3.org
+            certification.typo3.org
+        },
+        user: 'typo3org',
+        root_dir: node['apache']['docroot_dir'] + '/vhosts/typo3.org/home'
+
+    }
+]
