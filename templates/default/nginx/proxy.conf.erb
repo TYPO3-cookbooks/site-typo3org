@@ -1,0 +1,33 @@
+upstream backend_<%= @conf[:name] %> {
+    server <%= @conf[:backend_host] %>:<%= @conf[:backend_port] %>;
+}
+
+server {
+
+    #
+    #  NOT FIT FOR PRODUCTION
+    #
+
+	listen		<%= @conf[:listen_port_http] %>;
+	listen		<%= @conf[:listen_port_https] %> ssl default_server;
+
+    <% @conf[:domains].each do |domain| %>
+	server_name		<%= domain %>;
+	<% end %>
+
+	proxy_set_header	Host			$host;
+	proxy_set_header	X-Real-IP		$remote_addr;
+	proxy_set_header	X-Forwarded-For		$proxy_add_x_forwarded_for;
+	proxy_set_header	X-Forwarded-Port	$server_port;
+
+	# Explicitely unset HTTPS, it will be set correctly by Apache depending on X-Forwarded-Port (security!)
+	proxy_set_header	HTTPS			"";
+
+	# access_log		/var/log/nginx/<%= @conf[:name] %>.access.log combined;
+	access_log		off;
+	error_log		/var/log/nginx/<%= @conf[:name] %>.error.log;
+
+	location / {
+		proxy_pass	http://backend_<%= @conf[:name] %>;
+	}
+}
