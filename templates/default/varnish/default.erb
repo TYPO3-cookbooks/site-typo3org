@@ -1,0 +1,38 @@
+# Configuration file for varnish
+#
+# /etc/init.d/varnish expects the variables $DAEMON_OPTS, $NFILES and $MEMLOCK
+# to be set from this shell script fragment.
+#
+
+# Should we start varnishd at boot?  Set to "no" to disable.
+START=<%= @conf[:start] || node['varnish']['start'] %>
+
+# Maximum number of open files (for ulimit -n)
+NFILES=<%= @conf[:nfiles] || node['varnish']['nfiles'] %>
+
+# Maxiumum locked memory size for shared memory log
+MEMLOCK=<%= @conf[:memlock] || node['varnish']['memlock'] %>
+
+# Default varnish instance name is the local nodename.  Can be overridden with
+# the -n switch, to have more instances on a single server.
+INSTANCE=<%= @conf[:name] %>
+
+
+
+# Pass the Daemon options
+
+DAEMON_OPTS="-a <%= @conf[:listen_address] || node['varnish']['listen_address'] %>:<%= @conf[:listen_port] || node['varnish']['listen_port'] %> \
+              -f <%= node['varnish']['dir'] %>/<%= @conf[:name] %>.vcl \
+              -T <%= @conf[:admin_listen_address] || node['varnish']['admin_listen_address'] %>:<%= @conf[:admin_listen_port] || node['varnish']['admin_listen_port'] %> \
+              -u <%= @conf[:user] || node['varnish']['user'] %> -g <%= @conf[:group] || node['varnish']['group'] %> \
+              -t <%= @conf[:ttl] || node['varnish']['ttl'] %> \
+             <%- if node['platform_family'] == 'debian' %>
+              -n $INSTANCE \
+             <%- end %>
+              -s <%= @conf[:storage] || node['varnish']['storage'] %>,<%= ((@conf[:storage] || node['varnish']['storage'])=='file')?"#{@conf[:storage] || node['varnish']['storage_file']},":'' %><%= @conf[:storage_size] || node['varnish']['storage_size'] %> \
+              <%- unless (@conf[:parameters] || node['varnish']['parameters']).nil? %>
+                <%- (@conf[:parameters] || node['varnish']['parameters']).each do |param, value| %>
+                  -p <%= param + "=" + value %> \
+                <%- end %>
+              <%- end %>
+              -S <%= node['varnish']['secret_file'] %>"
