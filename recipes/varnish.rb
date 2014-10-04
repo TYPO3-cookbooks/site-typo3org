@@ -27,7 +27,9 @@ node['site-typo3org']['varnish']['vhosts'].each do |conf|
     group 'root'
     mode 0644
     variables(conf: conf)
-#    notifies :reload, 'service[varnish]'
+    %w{ varnish varnishlog }.each do |name|
+      notifies :reload, "service[#{name}-#{conf.name}]"
+    end
   end
 
   template "#{node['varnish']['dir']}/#{conf.name}.vcl" do
@@ -36,7 +38,10 @@ node['site-typo3org']['varnish']['vhosts'].each do |conf|
     group 'root'
     mode 0644
     variables(conf: conf)
-#    notifies :reload, 'service[varnish]'
+
+    %w{ varnish varnishlog }.each do |name|
+      notifies :reload, "service[#{name}-#{conf.name}]"
+    end
   end
 
   %w{ varnish varnishlog varnishncsa }.each do |name|
