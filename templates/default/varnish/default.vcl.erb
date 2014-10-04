@@ -38,7 +38,7 @@ sub vcl_recv {
 		}
 		# Checking the host as well might be problematic if varnish is behind nginx
 		# purge("req.url ~ " req.url " && req.http.host == " req.http.host);
-		purge("req.url ~ " req.url );
+		ban("req.url ~ " + req.url );
 		error 200 "Purged. (recv)";
 
 		return (lookup);
@@ -140,7 +140,7 @@ sub vcl_fetch {
 	# TODO: check if this is needed
 	# Make sure it will not conflict with the static file types below
 	if (req.url ~ "user.xml") {
-		return (pass);
+		return (hit_for_pass);
 	}
 
 	# set maximum timeouts to auto-discard stored objects
@@ -191,7 +191,7 @@ sub vcl_fetch {
 		set beresp.ttl = 0s;
 		set beresp.http.X-Cacheable = "NO: Has be_typo_user cookie";
 
-		return (pass);
+		return (hit_for_pass);
 	}
 
 	if (beresp.status == 301) {
@@ -245,7 +245,7 @@ sub vcl_fetch {
 			set beresp.http.X-Cacheable = "NO: User might be logged in";
 		}
 
-		return (pass);
+		return (hit_for_pass);
 	}
 
 	# user is not logged in, strip session cookie (and all others) from backend response,
@@ -271,7 +271,7 @@ sub vcl_hit {
 	if (req.request == "PURGE") {
 		# Note that setting ttl to 0 is magical.
 		# the object is zapped from cache.
-		set obj.ttl = 0s;
+		purge;
 		error 200 "Purged. (hit)";
 	}
 
@@ -281,9 +281,6 @@ sub vcl_hit {
 	}
 
 	if (obj.http.X-T3CacheInfo ~ "loginAllowedInBranch") {
-		# Avoid any client-side caching for these pages
-		set obj.http.Cache-Control = "private";
-
 		if (req.http.Cookie ~ "(e_typo_user|PHPSESSID|_pk_.*)") {
 			# Do not cache requests which come from a logged in user
 			return (pass);
@@ -293,11 +290,16 @@ sub vcl_hit {
 
 sub vcl_miss {
 	if (req.request == "PURGE") {
+		purge;
 		error 404 "Not in cache.";
 	}
 }
 
 sub vcl_deliver {
+	if (resp.http.X-T3CacheInfo ~ "loginAllowedInBranch") {
+		# Avoid any client-side caching for these pages
+		set resp.http.Cache-Control = "private";
+	}
 	if (obj.hits > 0) {
 		set resp.http.X-Cache = "HIT";
 		set resp.http.Server = "Varnish (HIT)";
@@ -322,7 +324,7 @@ sub vcl_error {
 <!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-strict.dtd">
 <html>
 <head>
-	<title>"} obj.status " " obj.response {"</title>
+	<title>"} + obj.status + " " + obj.response + {"</title>
 	<meta content="text/html; charset=utf-8" http-equiv="Content-Type"/>
 </head>
 <body>
@@ -343,10 +345,10 @@ sub vcl_error {
 	<span id="moreinfo" style="display:none;border:2px #a5c642 solid; width: 550px;">
 	<span style="color:#949494;">
 		<h2>More information: </h2>
-		<h3>Error "} obj.status " " obj.response {"</h3>
-		<p>"} obj.response {"</p>
-		<p>XID: "} req.xid {"</p>
-		<p>URL: "} req.url {"</p>
+		<h3>Error "} + obj.status + " " + obj.response + {"</h3>
+		<p>"} + obj.response + {"</p>
+		<p>XID: "} + req.xid + {"</p>
+		<p>URL: "} + req.url + {"</p>
 	</span>
 	</span>
 	<br />
