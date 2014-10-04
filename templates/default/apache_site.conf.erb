@@ -1,0 +1,44 @@
+<VirtualHost <%= node['apache']['listen_addresses'].first %>:<%= node['apache']['listen_ports'].first %>>
+	ServerName <%= @conf[:domain] %>
+	<% @conf[:domain_aliases].each do |domain_alias| %>
+	ServerAlias <%= domain_alias %>
+	<% end %>
+
+	DocumentRoot <%= @conf[:doc_root] %>
+	DirectoryIndex index.htm index.html index.php
+	<% unless @conf[:user] == node['apache']['user'] %>
+	SuexecUserGroup <%= @conf[:user] %> <%= @conf[:user] %>
+	<% end %>
+
+#	ScriptAlias /stats/awstats.pl "/var/www/awstats/typo3.org/awstats.pl"
+
+#	<Location "/stats/">
+#		AuthName "Statistiken"
+#		AuthType Basic
+#		AuthUserFile /etc/awstats/.htpasswd
+#		Require valid-user
+#		Options FollowSymLinks
+#		Order allow,deny
+#		Allow from all
+#	</Location>
+
+#	RewriteEngine on
+
+	# Rewrite statistics
+#	RewriteCond %{REQUEST_URI} ^/stats(|/)$ [NC]
+#	RewriteRule .* /stats/awstats.pl?config=typo3.org [L,R=301]
+
+	<Directory <%= @conf[:doc_root] %>>
+		FCGIWrapper <%= @conf[:fcgi_root] %>/php-fcgi-starter .php
+		<FilesMatch \.php$>
+			SetHandler fcgid-script
+		</FilesMatch>
+		Options +ExecCGI -Indexes
+		Order allow,deny
+		Allow from all
+		AllowOverride All
+	</Directory>
+
+	ErrorLog <%= @conf[:log_root] %>/error.log
+	CustomLog <%= @conf[:log_root] %>/access.log combined
+</VirtualHost>

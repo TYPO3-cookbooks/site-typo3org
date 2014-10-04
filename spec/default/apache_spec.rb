@@ -6,8 +6,13 @@ describe 'server setup' do
     it { should be_running   }
   end
 
-  describe port(80) do
+  describe port(8080) do
     it { should be_listening }
+  end
+
+  describe command('sudo apache2ctl -t') do
+    # lint config files
+    its(:exit_status) { should eq 0 }
   end
 
   describe command('sudo apache2ctl -t -D DUMP_MODULES')  do

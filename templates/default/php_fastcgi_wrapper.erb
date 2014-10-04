@@ -1,0 +1,4 @@
+#!/bin/sh
+export PHPRC="<%= @conf[:fcgi_root] %>/conf/"
+export TMPDIR="<%= @conf[:tmp_root] %>"
+exec <%= Mixlib::ShellOut.new('which php5-cgi').run_command.stdout.strip %>
