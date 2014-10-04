@@ -51,7 +51,7 @@ node['site-typo3org']['varnish']['vhosts'].each do |conf|
 
   %w{ varnish varnishlog }.each do |name|
     service "#{name}-#{conf.name}" do
-      supports restart: true, reload: true
+      supports restart: true, reload: true, status: true
       action %w(enable start)
     end
   end
