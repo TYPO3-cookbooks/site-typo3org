@@ -1,46 +1,11 @@
 # site-typo3org-cookbook
 
-TODO: Enter the cookbook description here.
-
-## Supported Platforms
-
-TODO: List your supported platforms.
-
-## Attributes
-
-<table>
-  <tr>
-    <th>Key</th>
-    <th>Type</th>
-    <th>Description</th>
-    <th>Default</th>
-  </tr>
-  <tr>
-    <td><tt>['site-typo3org']['bacon']</tt></td>
-    <td>Boolean</td>
-    <td>whether to include bacon</td>
-    <td><tt>true</tt></td>
-  </tr>
-</table>
-
-## Usage
-
-### site-typo3org::default
-
-Include `site-typo3org` in your node's `run_list`:
-
-```json
-{
-  "run_list": [
-    "recipe[site-typo3org::default]"
-  ]
-}
-```
+Installs/Configures typo3.org
 
 ## Development
 
+I had to get the Vagrantfile to work with Vagrant 1.4, but vagrant-berkshelf does not seem to compatible. That's why
+you need to *vendor* the cookbooks manually before provisioning
 
-
-## License and Authors
-
-Author:: YOUR_NAME (<YOUR_EMAIL>)
+    rm -rf cookbooks && berks vendor cookbooks
+    vagrant up --provision
